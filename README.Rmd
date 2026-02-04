@@ -1,297 +1,74 @@
-## Introduction
-> This section gives an overview of the data and codes in the file `bike_data_code_archive`.
+# Bike Data & Code Archive
 
-There are two files in the `data` folder.
+This repository contains the data, source code, and output files for the bike rental analysis project.
 
-1. `bike.data.csv`
-1. `raw.csv`
+---
 
-There are nine files in the `code` folder, and will be described individually in the following section.
+## 📂 Directory Structure
 
-1. `simulation.R`
-1. `simulation_likelihood.R`
-1. `estimation.R`
-1. `gurobi.ipynb`
-1. `estimation_am.R`
-1. `CSL.R`
-1. `demand_curve.R`
-1. `trace_plot.R`
-1. `histgram.R`
+### `data/`
+* `raw.csv`: The primary raw dataset containing transaction details.
+* `bike.data.csv`: Pre-processed dataset derived from `raw.csv`, used for core analysis.
 
-There are three folders in the `output` folder.
+### `code/`
+Contains **R** and **Jupyter Notebook** scripts for simulation, estimation, and visualization. Refer to the [Code Documentation](#-code-documentation) section for details.
 
-1. `estimation`: stores the estimation results.
-1. `CSL`: stores the customer service tables (CSL).
-1. `plot`: stores the plot of `demand_curves`, `psi_hist`, `lambda_hist`, `psi_trace`, and `lambda_trace`.
+### `output/`
+* `estimation/`: Results from parameter estimation models.
+* `CSL/`: Customer Service Level (CSL) tables.
+* `plot/`: Visualizations including demand curves, histograms, and trace plots.
 
+---
 
-## raw.csv
-> `raw.csv` is the raw data for our analysis.
+## 📊 Data Details: `raw.csv`
+> **Description:** This file contains the raw transaction information used for the analysis.
 
-Data file description:
+* **Contents:** Each row represents a transaction including `rental station` and `total rental fee`.
+* **Currency:** Fees are in **New Taiwan Dollar (NTD)**. 
+    * *Note: 1 NTD ≈ $0.035 USD (as of Oct 12, 2020).*
+* **Usage:** Descriptive statistics in **Table 4** and **Table 5** are derived directly from this file. It is also the source for the pre-processed `bike.data.csv`.
 
-* This file contains each transaction's information on the `rental station` and the `total rental fee`.
+---
 
-* The rental fees are measured in `New Taiwan dollar (NTD)`, where 1 dollar of TWD equals $0.035 USD as of October 12, 2020.
+## 💻 Code Documentation
 
-* Descriptive statistics presented in **`Table 4`** and **`Table 5`** can be directly derived from this dataset through `Excel` commands.
+### 1. Simulation Scripts
 
-* `bike.data.csv` can also be derived from this dataset through `Excel`, and will be used in the following analysis.
+| File | Description | Key Outputs |
+| :--- | :--- | :--- |
+| `simulation.R` | Simulates quantities for inside/outside goods (**Table 1**). | `s.x.1` (inside), `s.x.0` (outside) |
+| `simulation_likelihood.R` | Produces likelihoods and estimates (**Table 2**). | Likelihood variables `TL.1-6` and `L.1-6` |
 
-##  simulation.R
-> This file simulates the quantities for `inside good` and `outside good` in **Table 1**.
+### 2. Estimation & Optimization
 
-The input description:
+#### `estimation.R`
+* **Purpose:** Runs the MCMC algorithm (Appendix 2) to produce **Table 6**.
+* **Input:** `bike.data.csv`
+* **Outputs (`output/estimation/`):** `mean_psi.csv`, `mean_lambda.csv`, `sd_psi.csv`, `sd_lambda.csv`, and full result sets.
 
-* This simulation procedure takes no input file.
+#### `gurobi.ipynb`
+* **Purpose:** Python implementation using `gurobipy` to calculate price elasticity (**Table 7**).
+* **Procedure:** Solves the Mixed-Integer Program (MIP) defined in **Procedure 1**.
+* **Outputs:** `df_elasticity` (mean and SD for 18 rental options).
 
-The output description:
+#### `estimation_am.R`
+* **Purpose:** Estimates parameters specifically for the **Gongguan Area** (**Table 8**).
+* **Input:** Filtered `bike.data.csv` using `mean_psi.csv` as starting values.
 
-* The output of this file the quantities for `inside good` and `outside good`.
+---
 
-* The variable `s.x.1` stores the quantities for the `inside good`.
+### 3. Analysis & Visualizations
 
-* The variable `s.x.0` stores the quantities for the `outside good`.
+#### `CSL.R`
+* **Description:** Computes Customer Service Levels (**Table 9**).
+* **Outputs (`output/CSL/`):** Generates tables for discount-driven demand ranging from **20% to 80%** (e.g., `table.50.50.csv`).
 
-## simulation_likelihood.R
-> This file contains the codes to produce the `likelihoods` and `parameter estimates` in **Table 2**.
+#### `demand_curve.R`
+* **Description:** Plots demand curves (**Figure 1**).
+* **Outputs:** `.eps` files for rental options 1 through 6 in `output/plot/demand_curves/`.
 
-The input description:
-
-* This simulation procedure takes no input file.
-
-The simulation description:
-
-* We set the two parameters of psi and lambda to be `psi = 1` and `lambda = 1` to calculate the likelihoods.
-
-The output description:
-
-* The variable `TL.6`, `TL.3`, `TL.2`, and `TL.1` stores the true likelihood under duration-effect term `b = 6`, `b = 3`, `b = 2`, and `b = 1`, respectively; and the true parameter value of `psi = 1` and `lambda = 1`.
-
-* The variable `L.6`, `L.3`, `L.2`, and `L.1` stores the likelihood under under duration-effect term `b = 6`, `b = 3`, `b = 2`, and `b = 1`, respectively; and the parameter estimates of `bar_psi` and `bar_lambda`. 
-
-## estimation.R
-> This file produces the `parameter estimates` in **Table 6**.
-
-The input description:
-
-* This file takes the input file of the pre-processed data of `bike.data.csv`.
-
-The estimation procedure description:
-
-* This file do the  `Markov chain Monte Carlo (MCMC)` algorithm (detailed in `Appendix 2`) to obtain the parameter estimates of `psi` and `lambda` shown in `Table 6`.
-
-The output description (files are stored in the directory `../output/estimation/`):
-
-* `mean_psi.csv`: the mean of the parameter estimates for `psi`.
-
-* `mean_lambda.csv`: the mean of the parameter estimates for `lambda`.
-
-* `sd_psi.csv`: the standard deviation of parameter estimates for `psi`.
-
-* `sd_lambda.csv`: the standard deviation of parameter estimates for `lambda`.
-
-* `psi_result.csv`: all the parameter estimates for `psi`.
-
-* `lambda_result.csv`: all the parameter estimates for `lambda`.
-
-## gurobi.ipynb
-> This file `python` extension of `Gurobi` in the package of `gurobipy` to produce `price elasticity` presented in **Table 7**.
-
-
-The input description:
-
-* The input files are the two parameter estimates of `mean_psi.csv` and `mean_lambda.csv`.
-
-The procedure description:
-
-* This file uses the `Python` `Gurobi` of `gurobipy`.
-
-*  And uses `gurobipy` to solve for the `mixed-integer program (MIP)` in `Procedure 1`.
-
-The output description:
-
-* The variable `df_elasticity` stores the `mean` and `standard deviation` of `elasticity` for the `18` rental options.
-
-
-## estimation_am.R
-> This file contains the codes to produce `parameter estimates` for stations for `Gongguan Area` in **Table 8**.
-
-The input description:
-
-* The input are the `bike.data.csv` that we filter for the data in the `Gongguan Area`, and we use the parameter estimate of  the `mean_psi.csv` as the starting value in the `MCMC` estimation algorithm in `Appendix 2`
-
-
-The output description (files are stored in the directory `../output/estimation/`):
-
-* `mean_psi_am.csv`: the parameter estimates for `psi` at `Gongguan Area`.
-
-* `mean_lambda_am.csv`: the parameter estimates for `lambda` at `Gongguan Area`.
-
-* `sd_psi_am.csv`: the standard deviation for parameter estimates of `psi` at `Gongguan Area`.
-
-* `sd_lambda_am.csv`: the standard deviation for parameter estimates of `lambda` at `Gongguan Area`.
-
-## CSL.R
-> This file contains the codes to compute `customer service level (CSL)` in **Table 9**.
-
-The input descruption:
-
-* `mean_psi_am.csv`: the parameter estimates for `psi` at `Gongguan Area`.
-
-* `mean_lambda_am.csv`: the parameter estimates for `lambda` at `Gongguan Area`.
-
-The output description (files are stored in the directory `../output/CSL/`):
-
-* `table.80.20.csv`: the `CSL` under 20 percent of disount-driven demand.
-
-* `table.60.40.csv`: the `CSL` under 40 percent of disount-driven demand.
-
-* `table.50.50.csv`: the `CSL` under 50 percent of disount-driven demand.
-
-* `table.40.60.csv`: the `CSL` under 60 percent of disount-driven demand.
-
-* `table.20.80.csv`: the `CSL` under 80 percent of disount-driven demand.
-
-
-## demand_curve.R
-> This file contains the codes to plot the `demand curve` in **Figure 1**.
-
-The input description:
-
-* `mean_psi.csv`: the parameter estimates for `psi`.
-
-* `mean_lambda.csv`: the parameter estimates for `lambda`.
-
-The output description (files are stored in the directory `../output/plot/demand_curves/`):
-
-* `area_shape_1.eps`: the demand curve for `rental option 1`.
-
-* `area_shape_2.eps`: the demand curve for `rental option 2`.
-
-* `area_shape_3.eps`: the demand curve for `rental option 3`.
-
-* `area_shape_4.eps`: the demand curve for `rental option 4`.
-
-* `area_shape_5.eps`: the demand curve for `rental option 5`.
-
-* `area_shape_6.eps`: the demand curve for `rental option 6`.
-
-
-## trace_plot.R
-> This file contains the codes to compute `trace plot` in **Appendix 3**.
-
-The input description:
-
-* `mean_psi.csv`: the mean for the parameter estimates of `psi`.
-
-* `mean_lambda.csv`: mean for the parameter estimates of `lambda`.
-
-* `sd_psi.csv`: the standard deviation for the parameter estimates of `psi`.
-
-* `sd_lambda.csv`: the standard deviation for the parameter estimates of `lambda`.
-
-* `psi_result.csv`: the parameter estimates for `psi`.
-
-* `lambda_result.csv`: the  parameter estimates for `psi`.
-
-
-The `trace plot` output for `psi` (files are stored in the directory `../output/plot/psi_trace/`):
-
-* `psi_trace_plot_1 `: trace plot of `psi` for `rental option 1`.
-* `psi_trace_plot_2 `: trace plot of `psi` for `rental option 2`.
-* `psi_trace_plot_3 `: trace plot of `psi` for `rental option 3`.
-* `psi_trace_plot_4 `: trace plot of `psi` for `rental option 4`.
-* `psi_trace_plot_5 `: trace plot of `psi` for `rental option 5`.
-* `psi_trace_plot_6 `: trace plot of `psi` for `rental option 6`.
-* `psi_trace_plot_7 `: trace plot of `psi` for `rental option 7`.
-* `psi_trace_plot_8 `: trace plot of `psi` for `rental option 8`.
-* `psi_trace_plot_9 `: trace plot of `psi` for `rental option 9`.
-* `psi_trace_plot_10 `: trace plot of `psi` for `rental option 10`.
-* `psi_trace_plot_11 `: trace plot of `psi` for `rental option 11`.
-* `psi_trace_plot_12 `: trace plot of `psi` for `rental option 12`.
-* `psi_trace_plot_13 `: trace plot of `psi` for `rental option 13`.
-* `psi_trace_plot_14 `: trace plot of `psi` for `rental option 14`.
-* `psi_trace_plot_15 `: trace plot of `psi` for `rental option 15`.
-* `psi_trace_plot_16 `: trace plot of `psi` for `rental option 16`.
-* `psi_trace_plot_17 `: trace plot of `psi` for `rental option 17`.
-* `psi_trace_plot_18 `: trace plot of `psi` for `rental option 18`.
-
-The `trace plot` output for `lambda` (files are stored in the directory `../output/plot/lambda_trace/`):
-
-* `lambda_trace_plot_1 `: trace plot of `lambda` for `rental option 1`.
-* `lambda_trace_plot_2 `: trace plot of `lambda` for `rental option 2`.
-* `lambda_trace_plot_3 `: trace plot of `lambda` for `rental option 3`.
-* `lambda_trace_plot_4 `: trace plot of `lambda` for `rental option 4`.
-* `lambda_trace_plot_5 `: trace plot of `lambda` for `rental option 5`.
-* `lambda_trace_plot_6 `: trace plot of `lambda` for `rental option 6`.
-* `lambda_trace_plot_7 `: trace plot of `lambda` for `rental option 7`.
-* `lambda_trace_plot_8 `: trace plot of `lambda` for `rental option 8`.
-* `lambda_trace_plot_9 `: trace plot of `lambda` for `rental option 9`.
-* `lambda_trace_plot_10 `: trace plot of `lambda` for `rental option 10`.
-* `lambda_trace_plot_11 `: trace plot of `lambda` for `rental option 11`.
-* `lambda_trace_plot_12 `: trace plot of `lambda` for `rental option 12`.
-* `lambda_trace_plot_13 `: trace plot of `lambda` for `rental option 13`.
-* `lambda_trace_plot_14 `: trace plot of `lambda` for `rental option 14`.
-* `lambda_trace_plot_15 `: trace plot of `lambda` for `rental option 15`.
-* `lambda_trace_plot_16 `: trace plot of `lambda` for `rental option 16`.
-* `lambda_trace_plot_17 `: trace plot of `lambda` for `rental option 17`.
-* `lambda_trace_plot_18 `: trace plot of `lambda` for `rental option 18`.
-
-
-
-## histgram.R
-> This file contains the codes to compute `histgram` in **Appendix 3**.
-
-The input description:
-
-* `mean_psi.csv`: the parameter estimates for `psi`.
-
-* `mean_lambda.csv`: the parameter estimates for `lambda`.
-
-* `sd_psi.csv`: the standard deviation for the parameter estimates for `psi`.
-
-* `sd_lambda.csv`: the standard deviation for the parameter estimates for `lambda`.
-
-
-The `histogram` output for `psi` (files are stored in the directory `../output/plot/psi_hist/`):
-
-* `psi_h_1 `: histogram of `psi` for `rental option 1`.
-* `psi_h_2 `: histogram of `psi` for `rental option 2`.
-* `psi_h_3 `: histogram of `psi` for `rental option 3`.
-* `psi_h_4 `: histogram of `psi` for `rental option 4`.
-* `psi_h_5 `: histogram of `psi` for `rental option 5`.
-* `psi_h_6 `: histogram of `psi` for `rental option 6`.
-* `psi_h_7 `: histogram of `psi` for `rental option 7`.
-* `psi_h_8 `: histogram of `psi` for `rental option 8`.
-* `psi_h_9 `: histogram of `psi` for `rental option 9`.
-* `psi_h_10 `: histogram of `psi` for `rental option 10`.
-* `psi_h_11 `: histogram of `psi` for `rental option 11`.
-* `psi_h_12 `: histogram of `psi` for `rental option 12`.
-* `psi_h_13 `: histogram of `psi` for `rental option 13`.
-* `psi_h_14 `: histogram of `psi` for `rental option 14`.
-* `psi_h_15 `: histogram of `psi` for `rental option 15`.
-* `psi_h_16 `: histogram of `psi` for `rental option 16`.
-* `psi_h_17 `: histogram of `psi` for `rental option 17`.
-* `psi_h_18 `: histogram of `psi` for `rental option 18`.
-
-The `histogram` output for `lambda` (files are stored in the directory `../output/plot/lambda_hist/`):
-
-* `lambda_h_1 `: histogram of `lambda` for `rental option 1`.
-* `lambda_h_2 `: histogram of `lambda` for `rental option 2`.
-* `lambda_h_3 `: histogram of `lambda` for `rental option 3`.
-* `lambda_h_4 `: histogram of `lambda` for `rental option 4`.
-* `lambda_h_5 `: histogram of `lambda` for `rental option 5`.
-* `lambda_h_6 `: histogram of `lambda` for `rental option 6`.
-* `lambda_h_7 `: histogram of `lambda` for `rental option 7`.
-* `lambda_h_8 `: histogram of `lambda` for `rental option 8`.
-* `lambda_h_9 `: histogram of `lambda` for `rental option 9`.
-* `lambda_h_10 `: histogram of `lambda` for `rental option 10`.
-* `lambda_h_11 `: histogram of `lambda` for `rental option 11`.
-* `lambda_h_12 `: histogram of `lambda` for `rental option 12`.
-* `lambda_h_13 `: histogram of `lambda` for `rental option 13`.
-* `lambda_h_14 `: histogram of `lambda` for `rental option 14`.
-* `lambda_h_15 `: histogram of `lambda` for `rental option 15`.
-* `lambda_h_16 `: histogram of `lambda` for `rental option 16`.
-* `lambda_h_17 `: histogram of `lambda` for `rental option 17`.
-* `lambda_h_18 `: histogram of `lambda` for `rental option 18`.
+#### `trace_plot.R` & `histgram.R`
+* **Description:** Generates diagnostic plots for MCMC chains (**Appendix 3**).
+* **Outputs:** * **Trace Plots:** Located in `output/plot/psi_trace/` and `lambda_trace/`.
+    * **Histograms:** Located in `output/plot/psi_hist/` and `lambda_hist/`.
+    * *Note: Covers all 18 rental options for both parameters.*
